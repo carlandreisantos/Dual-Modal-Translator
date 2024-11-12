@@ -20,17 +20,17 @@ def draw_landmarks(image, results):
 
     mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS,
                              mp_drawing.DrawingSpec(color=(245,115,83), thickness=1, circle_radius=3), 
-                             mp_drawing.DrawingSpec(color=(245,115,83), thickness=1, circle_radius=1)
+                             mp_drawing.DrawingSpec(color=(245,115,83), thickness=1, circle_radius=3)
                              ) 
 
     mp_drawing.draw_landmarks(image, results.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS, 
                              mp_drawing.DrawingSpec(color=(245,115,83), thickness=1, circle_radius=3), 
-                             mp_drawing.DrawingSpec(color=(245,115,83), thickness=1, circle_radius=1)
+                             mp_drawing.DrawingSpec(color=(245,115,83), thickness=1, circle_radius=3)
                              ) 
   
     mp_drawing.draw_landmarks(image, results.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS, 
                              mp_drawing.DrawingSpec(color=(245,115,83), thickness=1, circle_radius=3), 
-                             mp_drawing.DrawingSpec(color=(245,115,83), thickness=1, circle_radius=1)
+                             mp_drawing.DrawingSpec(color=(245,115,83), thickness=1, circle_radius=3)
                              ) 
 
 
@@ -45,7 +45,7 @@ DATA_PATH = os.path.join('Training Data')
 
 no_sequences = 30
 
-sequence_length = 30
+sequence_length = 20
 
 
 def new_action():
