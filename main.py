@@ -12,7 +12,7 @@ last_detected_gesture = None
 
 # Load gesture data
 def load_data():
-    with open("gestures.json", "r") as f:
+    with open("Dual-Modal-Translator/gestures.json", "r") as f:
         return json.load(f)
 
 data = load_data()

@@ -4,7 +4,7 @@ import json
 import os
 from feature_extraction import normalize_landmarks, get_hand_shape, calculate_rotation_angle, get_hand_position
 
-DATA_FILE = "gestures.json"
+DATA_FILE = "Dual-Modal-Translator/gestures.json"
 
 def load_data():
     if os.path.exists(DATA_FILE):
