@@ -8,7 +8,7 @@ import os
 
 transcribed_text = ''
 # Set the path to your Google Cloud service account key
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "dual-modal-translator-41448ec0a8fd.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "Dual-Modal-Translator\dual-modal-translator-41448ec0a8fd.json"
 
 # Audio recording parameters
 STREAMING_LIMIT = 240000  # 4 minutes

@@ -38,7 +38,8 @@ root = tk.Tk()
 root.title("Gesture & Speech Recognition")
 root.geometry("800x600")
 root.configure(bg='white')
-
+root.attributes('-fullscreen', True)
+root.bind("<Escape>", lambda event: root.attributes("-fullscreen", False))
 # Create a frame to center content
 main_frame = tk.Frame(root, bg='white')
 main_frame.pack(expand=True, fill='both')
@@ -49,7 +50,7 @@ gesture_label = tk.Label(main_frame, text="Gesture Recognition History:", font=(
 gesture_label.pack()
 
 # Gesture History Box
-gesture_history = scrolledtext.ScrolledText(main_frame, height=5, width=80)
+gesture_history = scrolledtext.ScrolledText(main_frame, height=1, width=80)
 gesture_history.pack()
 
 # OpenCV Video Feed
@@ -61,7 +62,7 @@ speech_label = tk.Label(main_frame, text="Speech-to-Text History:", font=("Arial
 speech_label.pack()
 
 # Speech-to-Text History Box
-speech_history = scrolledtext.ScrolledText(main_frame, height=5, width=80)
+speech_history = scrolledtext.ScrolledText(main_frame, height=1, width=80)
 speech_history.pack()
 
 # Buttons
