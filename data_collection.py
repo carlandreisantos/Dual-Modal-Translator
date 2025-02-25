@@ -1,31 +1,35 @@
 import cv2
 import mediapipe as mp
+import json
+import os
 from feature_extraction import normalize_landmarks, get_hand_shape, calculate_rotation_angle, get_hand_position
 
-def calculate_similarity(list1, list2, threshold):
-    return len(list1) == len(list2) and all(abs(a - b) <= threshold for a, b in zip(list1, list2))
+DATA_FILE = "gestures.json"
 
-def calculate_angle_similarity(ref_angles, curr_angles, threshold):
-    angle_diffs = [abs(r - c) for r, c in zip(ref_angles, curr_angles)]
-    avg_diff = sum(angle_diffs) / len(angle_diffs)
-    return avg_diff <= threshold
+def load_data():
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r") as f:
+            return json.load(f)
+    return {}
 
+def save_data(data):
+    with open(DATA_FILE, "w") as f:
+        json.dump(data, f, indent=4)
+
+data = load_data()
 mp_hands = mp.solutions.hands
 mp_pose = mp.solutions.pose
 hands = mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.5, min_tracking_confidence=0.5)
 pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 mp_drawing = mp.solutions.drawing_utils
-
 cap = cv2.VideoCapture(1)
-print("Press 'q' to quit, 'r' to set the reference")
 
-reference_shape = [0] * 30
-reference_pos = [0] * 8
-reference_angle = [0] * 2
-
-shape_threshold = 0.3
-position_threshold = 0.15
-angle_threshold = 15  
+recording = False
+gesture_name = ""
+variation_count = 1
+include_shape = False
+include_angle = False
+include_pos = False
 
 while cap.isOpened():
     success, frame = cap.read()
@@ -38,11 +42,9 @@ while cap.isOpened():
     pose_results = pose.process(rgb_frame)
     frame_height, frame_width, _ = flipped_frame.shape
 
-    # Default values to prevent None issues
     shape = [0] * 30
     pos = [0] * 8
     angle = [0] * 2
-    match_detected = False
 
     if hands_results.multi_hand_landmarks:
         for hand_landmarks, hand_label in zip(hands_results.multi_hand_landmarks, hands_results.multi_handedness):
@@ -66,27 +68,43 @@ while cap.isOpened():
         pos = get_hand_position(normalized_landmarks)
         mp_drawing.draw_landmarks(flipped_frame, pose_results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
 
-    shape_match = calculate_similarity(shape, reference_shape, shape_threshold)
-    position_match = calculate_similarity(pos, reference_pos, position_threshold)
-    angle_match = calculate_angle_similarity(angle, reference_angle, angle_threshold)
-    match_detected = shape_match and position_match and angle_match
-
-    # Display Information
-    cv2.putText(flipped_frame, f"Shape Match: {match_detected}", (10, 90), 
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0) if match_detected else (0, 0, 255), 1)
-    cv2.putText(flipped_frame, f"Pos Match: {position_match}", (10, 120), 
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0) if position_match else (0, 0, 255), 1)
-
-    cv2.imshow("Gesture Recognition", flipped_frame)
-
+    cv2.imshow("Gesture Data Collection", flipped_frame)
     key = cv2.waitKey(5) & 0xFF
+
+    if key == ord('r'):
+        gesture_name = input("Enter gesture name: ")
+        if gesture_name not in data:
+            data[gesture_name] = {}
+        variation_count = 1
+        print("Select features to record for all variations:")
+        include_shape = input("Include shape? (y/n): ").strip().lower() == 'y'
+        include_angle = input("Include angle? (y/n): ").strip().lower() == 'y'
+        include_pos = input("Include position? (y/n): ").strip().lower() == 'y'
+        print("Recording new gesture. Press SPACE to save each of 30 variations.")
+        recording = True
+    
+    if key == ord(' ') and recording and variation_count <= 30:
+        print(f"Recording variation {variation_count}/30")
+        
+        variation_data = {}
+        if include_shape:
+            variation_data["Shape"] = shape
+        if include_angle:
+            variation_data["Angle"] = angle
+        if include_pos:
+            variation_data["Pos"] = pos
+
+        data[gesture_name][f"Variation {variation_count}"] = variation_data
+        variation_count += 1
+        save_data(data)
+        print("Variation saved.")
+        
+        if variation_count > 30:
+            print("30 variations recorded. Stopping recording.")
+            recording = False
+    
     if key == ord('q'):
         break
-    elif key == ord('r'):
-        reference_shape = shape
-        reference_pos = pos
-        reference_angle = angle
-        print("Reference updated for both hands!")
 
 cap.release()
 cv2.destroyAllWindows()
