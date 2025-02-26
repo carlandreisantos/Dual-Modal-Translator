@@ -10,9 +10,13 @@ from feature_extraction import normalize_landmarks, get_hand_shape, calculate_ro
 
 last_detected_gesture = None
 
+gesture_buffer = []  # Store last few detected gestures
+buffer_size = 5  # Number of frames to consider
+min_consistency = 3 
+
 # Load gesture data
 def load_data():
-    with open("Dual-Modal-Translator/gestures.json", "r") as f:
+    with open("gestures.json", "r") as f:
         return json.load(f)
 
 data = load_data()
@@ -31,7 +35,7 @@ mp_pose = mp.solutions.pose
 hands = mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.5, min_tracking_confidence=0.5)
 pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 mp_drawing = mp.solutions.drawing_utils
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 
 # Tkinter UI Setup
 root = tk.Tk()
@@ -73,7 +77,7 @@ speech_button = tk.Button(button_frame, text="Start Speech Recognition", width=2
 speech_button.pack(side=tk.BOTTOM, padx=10, pady=5)
 
 # Gesture Matching Thresholds
-shape_threshold = 0.3
+shape_threshold = 0.14
 position_threshold = 0.15
 angle_threshold = 15
 
@@ -145,12 +149,23 @@ def update_frame():
                 best_match = gesture_name
                 best_score = score
 
-    if best_match and best_match != last_detected_gesture:
-        cv2.putText(flipped_frame, f"Detected: {best_match}", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        gesture_history.insert(tk.END, best_match + " ")
-        last_detected_gesture = best_match
-        
-        gesture_lines = gesture_history.get("1.0", tk.END).strip().split(" ")
+
+    if best_match:
+        gesture_buffer.append(best_match)
+
+        # Keep buffer within size limit
+        if len(gesture_buffer) > buffer_size:
+            gesture_buffer.pop(0)
+
+        # Count occurrences of the most common gesture in the buffer
+        most_common_gesture = max(set(gesture_buffer), key=gesture_buffer.count)
+        count = gesture_buffer.count(most_common_gesture)
+
+        # Only update if a gesture appears consistently in the buffer
+        if count >= min_consistency and most_common_gesture != last_detected_gesture:
+            last_detected_gesture = most_common_gesture
+            gesture_history.insert(tk.END, most_common_gesture + " ")
+            gesture_history.yview(tk.END)  # Auto-scroll
     
     
     img = Image.fromarray(rgb_frame)
