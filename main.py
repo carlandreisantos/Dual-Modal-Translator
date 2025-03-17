@@ -140,6 +140,10 @@ def update_frame():
                 variation_match = variation_name
                 best_match = gesture_name
                 best_score = score
+    # insert the dtw detection here
+    # append the past 30 frames' features in a array
+    # call a function from the dtw script, passing through the array
+    # the dtw function returns the name of the closest gesture
 
     if variation_match:
         print(best_match, variation_match)
