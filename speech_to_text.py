@@ -11,7 +11,7 @@ transcribed_text = ''
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "Dual-Modal-Translator\dual-modal-translator-cb789111ae3d.json"
 
 # Audio recording parameters
-STREAMING_LIMIT = 240000  # 4 minutes
+STREAMING_LIMIT = 1800000  
 SAMPLE_RATE = 16000
 CHUNK_SIZE = int(SAMPLE_RATE / 10)  # 100ms
 
@@ -21,14 +21,10 @@ YELLOW = "\033[0;33m"
 
 
 def get_current_time() -> int:
-    """Return Current Time in MS."""
     return int(round(time.time() * 1000))
 
 class ResumableMicrophoneStream:
-    """Opens a recording stream as a generator yielding the audio chunks."""
-
     def __init__(self, rate: int, chunk_size: int) -> None:
-        """Creates a resumable microphone stream."""
         self._rate = rate
         self.chunk_size = chunk_size
         self._num_channels = 1
@@ -55,12 +51,10 @@ class ResumableMicrophoneStream:
         )
 
     def __enter__(self) -> object:
-        """Opens the stream."""
         self.closed = False
         return self
 
     def __exit__(self, type: object, value: object, traceback: object) -> object:
-        """Closes the stream and releases resources."""
         self._audio_stream.stop_stream()
         self._audio_stream.close()
         self.closed = True
@@ -68,12 +62,10 @@ class ResumableMicrophoneStream:
         self._audio_interface.terminate()
 
     def _fill_buffer(self, in_data: object, *args: object, **kwargs: object) -> object:
-        """Continuously collect data from the audio stream into the buffer."""
         self._buff.put(in_data)
         return None, pyaudio.paContinue
 
     def generator(self) -> object:
-        """Stream Audio from microphone to API and to local buffer."""
         while not self.closed:
             data = []
 
@@ -101,7 +93,6 @@ class ResumableMicrophoneStream:
 
                 self.new_stream = False
 
-            # Use a blocking get() to ensure there's at least one chunk of data
             chunk = self._buff.get()
             self.audio_input.append(chunk)
 
@@ -109,7 +100,6 @@ class ResumableMicrophoneStream:
                 return
             data.append(chunk)
 
-            # Now consume whatever other data's still buffered.
             while True:
                 try:
                     chunk = self._buff.get(block=False)
@@ -124,7 +114,6 @@ class ResumableMicrophoneStream:
             yield b"".join(data)
 
 def listen_print_loop(responses, stream, callback=None):
-    """Function to handle responses and optionally send updates via a callback."""
     transcription = ""
     for response in responses:
         if not response.results:
